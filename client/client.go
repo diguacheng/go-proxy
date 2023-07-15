@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"strings"
 	"time"
@@ -17,8 +18,8 @@ var (
 )
 
 func init() {
-	flag.StringVar(&host, "h", "127.0.0.1", "remote server ip")
-	flag.IntVar(&localPort, "l", 8080, "the local port")
+	flag.StringVar(&host, "h", "39.102.81.17", "remote server ip")
+	flag.IntVar(&localPort, "l", 7860, "the local port")
 	flag.IntVar(&remotePort, "r", 3333, "remote server port")
 }
 
@@ -52,7 +53,7 @@ func (s *server) Read(ctx context.Context) {
 					s.conn.Write([]byte("pi"))
 					continue
 				}
-				fmt.Println("从server读取数据失败, ", err.Error())
+				log.Println("从server读取数据失败, ", err.Error())
 				s.exit <- err
 				return
 			}
@@ -76,6 +77,7 @@ func (s *server) Write(ctx context.Context) {
 		case data := <-s.write:
 			_, err := s.conn.Write(data)
 			if err != nil && err != io.EOF {
+				log.Println("将数据写入server失败 ", err.Error())
 				s.exit <- err
 				return
 			}
@@ -102,6 +104,7 @@ func (l *local) Read(ctx context.Context) {
 			data := make([]byte, 10240)
 			n, err := l.conn.Read(data)
 			if err != nil {
+				log.Println("local读取数据失败", err.Error())
 				l.exit <- err
 				return
 			}
@@ -118,6 +121,7 @@ func (l *local) Write(ctx context.Context) {
 		case data := <-l.write:
 			_, err := l.conn.Write(data)
 			if err != nil {
+				log.Println("local写入数据失败", err.Error())
 				l.exit <- err
 				return
 			}
@@ -134,8 +138,8 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		log.Println("\n 已连接server: %s", serverConn.RemoteAddr())
 
-		fmt.Printf("已连接server: %s \n", serverConn.RemoteAddr())
 		server := &server{
 			conn:   serverConn,
 			read:   make(chan []byte),

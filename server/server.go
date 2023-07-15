@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"strings"
 	"time"
@@ -49,7 +50,7 @@ func (c *client) Read(ctx context.Context) {
 					c.conn.Write([]byte("pi"))
 					continue
 				}
-				fmt.Println("读取出现错误...")
+				log.Println("client读取数据失败",err.Error())
 				c.exit <- err
 				return
 			}
@@ -73,6 +74,7 @@ func (c *client) Write(ctx context.Context) {
 		case data := <-c.write:
 			_, err := c.conn.Write(data)
 			if err != nil && err != io.EOF {
+				log.Println("client写入数据失败",err.Error())
 				c.exit <- err
 				return
 			}
@@ -100,6 +102,7 @@ func (u *user) Read(ctx context.Context) {
 			data := make([]byte, 10240)
 			n, err := u.conn.Read(data)
 			if err != nil && err != io.EOF {
+				log.Println("user读取数据失败",err.Error())
 				u.exit <- err
 				return
 			}
@@ -117,6 +120,7 @@ func (u *user) Write(ctx context.Context) {
 		case data := <-u.write:
 			_, err := u.conn.Write(data)
 			if err != nil && err != io.EOF {
+				log.Println("user写入数据失败",err.Error())
 				u.exit <- err
 				return
 			}
@@ -138,13 +142,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("监听:%d端口, 等待client连接... \n", remotePort)
+	log.Printf("\n监听:%d端口, 等待client连接...\n", remotePort)
 	// 监听User来连接
 	userListener, err := net.Listen("tcp", fmt.Sprintf(":%d", localPort))
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("监听:%d端口, 等待user连接.... \n", localPort)
+	log.Printf("\n监听:%d端口, 等待user连接.... \n", localPort)
 
 	for {
 		// 有Client来连接了
@@ -153,7 +157,7 @@ func main() {
 			panic(err)
 		}
 
-		fmt.Printf("有Client连接: %s \n", clientConn.RemoteAddr())
+		log.Printf("有Client连接: %s \n", clientConn.RemoteAddr())
 
 		client := &client{
 			conn:   clientConn,
@@ -236,6 +240,6 @@ func AcceptUserConn(userListener net.Listener, connChan chan net.Conn) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("user connect: %s \n", userConn.RemoteAddr())
+	log.Printf("user connect: %s \n", userConn.RemoteAddr())
 	connChan <- userConn
 }
