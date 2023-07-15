@@ -142,13 +142,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	log.Printf("\n监听:%d端口, 等待client连接...\n", remotePort)
+	log.Printf("监听:%d端口, 等待client连接...\n", remotePort)
 	// 监听User来连接
 	userListener, err := net.Listen("tcp", fmt.Sprintf(":%d", localPort))
 	if err != nil {
 		panic(err)
 	}
-	log.Printf("\n监听:%d端口, 等待user连接.... \n", localPort)
+	log.Printf("监听:%d端口, 等待user连接.... \n", localPort)
 
 	for {
 		// 有Client来连接了
