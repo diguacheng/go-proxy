@@ -18,7 +18,8 @@ var (
 )
 
 func init() {
-	flag.StringVar(&host, "h", "39.102.81.17", "remote server ip")
+	//flag.StringVar(&host, "h", "39.102.81.17", "remote server ip")
+	flag.StringVar(&host, "h", "127.0.0.1", "remote server ip")
 	flag.IntVar(&localPort, "l", 7860, "the local port")
 	flag.IntVar(&remotePort, "r", 3333, "remote server port")
 }
@@ -36,9 +37,10 @@ type server struct {
 
 // 从Server端读取数据
 func (s *server) Read(ctx context.Context) {
-	// 如果10秒钟内没有消息传输，则Read函数会返回一个timeout的错误
-	_ = s.conn.SetReadDeadline(time.Now().Add(time.Second * 10))
+
 	for {
+		// 如果10秒钟内没有消息传输，则Read函数会返回一个timeout的错误
+		_ = s.conn.SetReadDeadline(time.Now().Add(time.Second * 10))
 		select {
 		case <-ctx.Done():
 			return
@@ -103,7 +105,7 @@ func (l *local) Read(ctx context.Context) {
 		default:
 			data := make([]byte, 10240)
 			n, err := l.conn.Read(data)
-			if err != nil {
+			if err != nil && err != io.EOF {
 				log.Println("local读取数据失败", err.Error())
 				l.exit <- err
 				return
@@ -138,7 +140,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		log.Println("\n 已连接server: %s", serverConn.RemoteAddr())
+		log.Printf("已连接server: %s\n", serverConn.RemoteAddr())
 
 		server := &server{
 			conn:   serverConn,
@@ -192,11 +194,11 @@ func handle(server *server) {
 			server.write <- data
 
 		case err := <-server.exit:
-			fmt.Printf("server have err: %s", err.Error())
+			log.Printf("server have err: %s\n", err.Error())
 			cancel()
 			return
 		case err := <-local.exit:
-			fmt.Printf("local have err: %s", err.Error())
+			log.Printf("local have err: %s\n", err.Error())
 			cancel()
 			return
 		}

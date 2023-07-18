@@ -34,9 +34,10 @@ type client struct {
 
 // 从Client端读取数据
 func (c *client) Read(ctx context.Context) {
-	// 如果10秒钟内没有消息传输，则Read函数会返回一个timeout的错误
-	_ = c.conn.SetReadDeadline(time.Now().Add(time.Second * 10))
+
 	for {
+		// 如果10秒钟内没有消息传输，则Read函数会返回一个timeout的错误
+		_ = c.conn.SetReadDeadline(time.Now().Add(time.Second * 10))
 		select {
 		case <-ctx.Done():
 			return
@@ -50,7 +51,7 @@ func (c *client) Read(ctx context.Context) {
 					c.conn.Write([]byte("pi"))
 					continue
 				}
-				log.Println("client读取数据失败",err.Error())
+				log.Println("client读取数据失败", err.Error())
 				c.exit <- err
 				return
 			}
@@ -74,7 +75,7 @@ func (c *client) Write(ctx context.Context) {
 		case data := <-c.write:
 			_, err := c.conn.Write(data)
 			if err != nil && err != io.EOF {
-				log.Println("client写入数据失败",err.Error())
+				log.Println("client写入数据失败", err.Error())
 				c.exit <- err
 				return
 			}
@@ -93,8 +94,9 @@ type user struct {
 
 // 从User端读取数据
 func (u *user) Read(ctx context.Context) {
-	_ = u.conn.SetReadDeadline(time.Now().Add(time.Second * 200))
+
 	for {
+		_ = u.conn.SetReadDeadline(time.Now().Add(time.Second * 20))
 		select {
 		case <-ctx.Done():
 			return
@@ -102,7 +104,7 @@ func (u *user) Read(ctx context.Context) {
 			data := make([]byte, 10240)
 			n, err := u.conn.Read(data)
 			if err != nil && err != io.EOF {
-				log.Println("user读取数据失败",err.Error())
+				log.Println("user读取数据失败", err.Error())
 				u.exit <- err
 				return
 			}
@@ -120,7 +122,7 @@ func (u *user) Write(ctx context.Context) {
 		case data := <-u.write:
 			_, err := u.conn.Write(data)
 			if err != nil && err != io.EOF {
-				log.Println("user写入数据失败",err.Error())
+				log.Println("user写入数据失败", err.Error())
 				u.exit <- err
 				return
 			}
@@ -205,7 +207,7 @@ func HandleClient(client *client, userConnChan chan net.Conn) {
 			cancel()
 			return
 		case err := <-user.exit:
-			fmt.Println("user出现错误，关闭连接", err.Error())
+			fmt.Println("user出现错误,关闭连接", err.Error())
 			cancel()
 			return
 		}
