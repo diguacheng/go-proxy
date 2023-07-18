@@ -58,7 +58,7 @@ func (c *client) Read(ctx context.Context) {
 
 			// 收到心跳包,则跳过
 			if data[0] == 'p' && data[1] == 'i' {
-				fmt.Println("server收到心跳包")
+				log.Println("server收到心跳包")
 				continue
 			}
 			c.read <- data[:n]
