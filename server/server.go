@@ -17,8 +17,8 @@ var (
 )
 
 func init() {
-	flag.IntVar(&localPort, "l", 5200, "the user link port")
-	flag.IntVar(&remotePort, "r", 3333, "client listen port")
+	flag.IntVar(&localPort, "l", 5355, "the user link port")
+	flag.IntVar(&remotePort, "r", 5344, "client listen port")
 }
 
 type client struct {
@@ -63,6 +63,7 @@ func (c *client) Read(ctx context.Context) {
 			}
 			c.read <- data[:n]
 		}
+		log.Println("client Read....")
 	}
 }
 
@@ -80,6 +81,7 @@ func (c *client) Write(ctx context.Context) {
 				return
 			}
 		}
+		log.Println("client Write....")
 	}
 }
 
@@ -110,6 +112,8 @@ func (u *user) Read(ctx context.Context) {
 			}
 			u.read <- data[:n]
 		}
+		log.Println("user Read....")
+
 	}
 }
 
@@ -127,6 +131,8 @@ func (u *user) Write(ctx context.Context) {
 				return
 			}
 		}
+		log.Println("user Write....")
+
 	}
 }
 
@@ -211,6 +217,7 @@ func HandleClient(client *client, userConnChan chan net.Conn) {
 			cancel()
 			return
 		}
+		log.Println("HandleClient....")
 	}
 }
 
@@ -233,6 +240,7 @@ func handle(ctx context.Context, client *client, user *user) {
 		case <-ctx.Done():
 			return
 		}
+		log.Println("handle....")
 	}
 }
 

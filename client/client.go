@@ -19,9 +19,9 @@ var (
 
 func init() {
 	flag.StringVar(&host, "h", "39.102.81.17", "remote server ip")
-	flag.StringVar(&host, "h", "127.0.0.1", "remote server ip")
+	//flag.StringVar(&host, "h", "127.0.0.1", "remote server ip")
 	flag.IntVar(&localPort, "l", 7860, "the local port")
-	flag.IntVar(&remotePort, "r", 3333, "remote server port")
+	flag.IntVar(&remotePort, "r", 5344, "remote server port")
 }
 
 type server struct {
@@ -62,11 +62,12 @@ func (s *server) Read(ctx context.Context) {
 
 			// 如果收到心跳包, 则跳过
 			if data[0] == 'p' && data[1] == 'i' {
-				fmt.Println("client收到心跳包")
+				log.Println("client收到心跳包")
 				continue
 			}
 			s.read <- data[:n]
 		}
+		log.Println("server Read....")
 	}
 }
 
@@ -84,6 +85,7 @@ func (s *server) Write(ctx context.Context) {
 				return
 			}
 		}
+		log.Println("server Write....")
 	}
 }
 
@@ -112,6 +114,7 @@ func (l *local) Read(ctx context.Context) {
 			}
 			l.read <- data[:n]
 		}
+		log.Println("local Read....")
 	}
 }
 
@@ -128,6 +131,7 @@ func (l *local) Write(ctx context.Context) {
 				return
 			}
 		}
+		log.Println("local Write....")
 	}
 }
 
