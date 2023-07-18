@@ -18,7 +18,7 @@ var (
 )
 
 func init() {
-	//flag.StringVar(&host, "h", "39.102.81.17", "remote server ip")
+	flag.StringVar(&host, "h", "39.102.81.17", "remote server ip")
 	flag.StringVar(&host, "h", "127.0.0.1", "remote server ip")
 	flag.IntVar(&localPort, "l", 7860, "the local port")
 	flag.IntVar(&remotePort, "r", 3333, "remote server port")
