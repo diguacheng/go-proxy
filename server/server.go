@@ -44,16 +44,21 @@ func (c *client) Read(ctx context.Context) {
 		default:
 			data := make([]byte, 10240)
 			n, err := c.conn.Read(data)
-			if err != nil && err != io.EOF {
-				if strings.Contains(err.Error(), "timeout") {
-					// 设置读取时间为3秒，3秒后若读取不到, 则err会抛出timeout,然后发送心跳
-					_ = c.conn.SetReadDeadline(time.Now().Add(time.Second * 3))
-					c.conn.Write([]byte("pi"))
-					continue
+			if err != nil {
+				if err != io.EOF {
+					if strings.Contains(err.Error(), "timeout") {
+						// 设置读取时间为3秒，3秒后若读取不到, 则err会抛出timeout,然后发送心跳
+						_ = c.conn.SetReadDeadline(time.Now().Add(time.Second * 3))
+						c.conn.Write([]byte("pi"))
+						continue
+					}
+					log.Println("client读取数据失败", err.Error())
+					c.exit <- err
+					return
+				} else {
+					return
 				}
-				log.Println("client读取数据失败", err.Error())
-				c.exit <- err
-				return
+
 			}
 
 			// 收到心跳包,则跳过
@@ -105,10 +110,14 @@ func (u *user) Read(ctx context.Context) {
 		default:
 			data := make([]byte, 10240)
 			n, err := u.conn.Read(data)
-			if err != nil && err != io.EOF {
-				log.Println("user读取数据失败", err.Error())
-				u.exit <- err
-				return
+			if err != nil {
+				if err != io.EOF {
+					log.Println("user读取数据失败", err.Error())
+					u.exit <- err
+					return
+				} else {
+					return
+				}
 			}
 			u.read <- data[:n]
 		}

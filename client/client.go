@@ -47,17 +47,21 @@ func (s *server) Read(ctx context.Context) {
 		default:
 			data := make([]byte, 10240)
 			n, err := s.conn.Read(data)
-			if err != nil && err != io.EOF {
-				// 读取超时，发送一个心跳包过去
-				if strings.Contains(err.Error(), "timeout") {
-					// 3秒发一次心跳
-					_ = s.conn.SetReadDeadline(time.Now().Add(time.Second * 3))
-					s.conn.Write([]byte("pi"))
-					continue
+			if err != nil {
+				if err != io.EOF {
+					// 读取超时，发送一个心跳包过去
+					if strings.Contains(err.Error(), "timeout") {
+						// 3秒发一次心跳
+						_ = s.conn.SetReadDeadline(time.Now().Add(time.Second * 3))
+						s.conn.Write([]byte("pi"))
+						continue
+					}
+					log.Println("从server读取数据失败, ", err.Error())
+					s.exit <- err
+					return
+				} else {
+					return
 				}
-				log.Println("从server读取数据失败, ", err.Error())
-				s.exit <- err
-				return
 			}
 
 			// 如果收到心跳包, 则跳过
@@ -65,6 +69,7 @@ func (s *server) Read(ctx context.Context) {
 				log.Println("client收到心跳包")
 				continue
 			}
+			log.Printf("server reade %s\n", string(data[:n]))
 			s.read <- data[:n]
 		}
 		log.Println("server Read....")
@@ -101,17 +106,24 @@ type local struct {
 func (l *local) Read(ctx context.Context) {
 
 	for {
+		_ = l.conn.SetReadDeadline(time.Now().Add(time.Second * 10))
 		select {
 		case <-ctx.Done():
 			return
 		default:
 			data := make([]byte, 10240)
 			n, err := l.conn.Read(data)
-			if err != nil && err != io.EOF {
-				log.Println("local读取数据失败", err.Error())
-				l.exit <- err
-				return
+			log.Println(n, err)
+			if err != nil {
+				if err != io.EOF {
+					log.Println("local读取数据失败", err.Error())
+					l.exit <- err
+					return
+				} else {
+					return
+				}
 			}
+			log.Printf("local reade n:%d %s\n", n, string(data[:n]))
 			l.read <- data[:n]
 		}
 		log.Println("local Read....")
