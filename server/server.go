@@ -44,6 +44,7 @@ func (c *client) Read(ctx context.Context) {
 		default:
 			data := make([]byte, 10240)
 			n, err := c.conn.Read(data)
+			log.Println("client read", n, err)
 			if err != nil {
 				if err != io.EOF {
 					if strings.Contains(err.Error(), "timeout") {
@@ -66,6 +67,7 @@ func (c *client) Read(ctx context.Context) {
 				log.Println("server收到心跳包")
 				continue
 			}
+			log.Println("client read data ", string(data[:n]))
 			c.read <- data[:n]
 		}
 		log.Println("client Read....")
@@ -110,6 +112,7 @@ func (u *user) Read(ctx context.Context) {
 		default:
 			data := make([]byte, 10240)
 			n, err := u.conn.Read(data)
+			log.Println("user read", n, err)
 			if err != nil {
 				if err != io.EOF {
 					log.Println("user读取数据失败", err.Error())
@@ -119,6 +122,7 @@ func (u *user) Read(ctx context.Context) {
 					return
 				}
 			}
+			log.Println("user read data ", string(data[:n]))
 			u.read <- data[:n]
 		}
 		log.Println("user Read....")
@@ -261,4 +265,5 @@ func AcceptUserConn(userListener net.Listener, connChan chan net.Conn) {
 	}
 	log.Printf("user connect: %s \n", userConn.RemoteAddr())
 	connChan <- userConn
+
 }

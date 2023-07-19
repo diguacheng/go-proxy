@@ -78,6 +78,7 @@ func (s *server) Read(ctx context.Context) {
 
 // 将数据写入到Server端
 func (s *server) Write(ctx context.Context) {
+	ticker := time.NewTicker(time.Second * 10)
 	for {
 		select {
 		case <-ctx.Done():
@@ -89,7 +90,14 @@ func (s *server) Write(ctx context.Context) {
 				s.exit <- err
 				return
 			}
+		case <-ticker.C:
+			_, err := s.conn.Write([]byte("pi"))
+			if err != nil {
+				log.Println(err)
+			}
+
 		}
+
 		log.Println("server Write....")
 	}
 }
@@ -113,9 +121,15 @@ func (l *local) Read(ctx context.Context) {
 		default:
 			data := make([]byte, 10240)
 			n, err := l.conn.Read(data)
-			log.Println(n, err)
+			log.Println("read", n, err)
 			if err != nil {
 				if err != io.EOF {
+					//if strings.Contains(err.Error(), "timeout") {
+					//	// 3秒发一次心跳
+					//	_ = l.conn.SetReadDeadline(time.Now().Add(time.Second * 3))
+					//	l.conn.Write([]byte("pi"))
+					//	continue
+					//}
 					log.Println("local读取数据失败", err.Error())
 					l.exit <- err
 					return
@@ -138,7 +152,7 @@ func (l *local) Write(ctx context.Context) {
 		case data := <-l.write:
 			_, err := l.conn.Write(data)
 			if err != nil {
-				log.Println("local写入数据失败", err.Error())
+				log.Println("local写入数据失败", err.Error(), string(data))
 				l.exit <- err
 				return
 			}
