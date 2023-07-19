@@ -119,7 +119,7 @@ func (u *user) Read(ctx context.Context) {
 					u.exit <- err
 					return
 				} else {
-					return
+					continue
 				}
 			}
 			log.Println("user read data ", string(data[:n]))
